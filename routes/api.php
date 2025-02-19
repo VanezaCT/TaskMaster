@@ -8,22 +8,19 @@ use App\Http\Controllers\AuthController;
 // Route::get('/user', function (Request $request) {
 //     return $request->user();
 // })->middleware('auth:sanctum');
-Route::post('task', [TaskController::class, 'store'])->middleware('auth:sanctum');
-
-Route::get('task', [TaskController::class, 'index'])->middleware('auth:sanctum');
-
-Route::post('user', [UserController::class, 'store']);
-
-Route::delete('/task/{id}', [TaskController::class, 'destroy'])->middleware('auth:sanctum');
-
-Route::put('/task/{id}', [TaskController::class, 'update'])->middleware('auth:sanctum');
+Route::group(['prefix' => 'task', 'middleware' => 'auth:sanctum'], function () {
+    Route::post('', [TaskController::class, 'store']);
+    Route::get('', [TaskController::class, 'index']);
+    Route::delete('/{id}', [TaskController::class, 'destroy']);
+    Route::put('/{id}', [TaskController::class, 'update']);
+});
 
 Route::group(['prefix' => 'auth'], function () {
     Route::post('login', [AuthController::class, 'login']);
     Route::post('register', [AuthController::class, 'register']);
 
-    Route::group(['middleware' => 'auth:sanctum'], function() {
-      Route::get('logout', [AuthController::class, 'logout']);
-      Route::get('user', [AuthController::class, 'user']);
+    Route::group(['middleware' => 'auth:sanctum'], function () {
+        Route::get('logout', [AuthController::class, 'logout']);
+        Route::get('user', [AuthController::class, 'user']);
     });
 });
