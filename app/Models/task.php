@@ -9,7 +9,9 @@ class task extends Model
     //
     protected $fillable = [
         'user_id',
-        'name', // Agrega otros campos que desees permitir para asignación masiva
+        'titulo',
+        'descripcion',
+        'fecha_vencimiento',
         'status'
     ];
 }

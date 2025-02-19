@@ -6,18 +6,21 @@ use Illuminate\Http\Request;
 use App\Models\Task;
 use Illuminate\Support\Facades\Auth;
 
+/**
+ *
+ *
+ * @OA\Server(url="http://swagger.local")
+*/
+
 class TaskController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+
     public function index()
     {
-        //
-        $task = Task::get();
+        $tasks = Task::where('user_id', Auth::id())
+            ->get();
 
-        $task = $task->where('user_id', '=', 4);
-        return response()->json($task,200);
+        return response()->json($tasks, 200);
     }
 
     /**
@@ -29,26 +32,21 @@ class TaskController extends Controller
 
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+        public function store(Request $request)
     {
-        $user = Auth::user()->id;
-
-        $request['user_id']=$user;
+        $user_id = Auth::user()->id;
+        $request['user_id'] = $user_id;
 
         $validated = $request->validate([
             'user_id' => 'required',
-            'name' => 'required',
-            'status' => 'required'
+            'titulo' => 'required|string|max:100',
+            'descripcion' => 'required|string|max:255',
+            'fecha_vencimiento' => 'required|string|max:50',
+            'status' => 'required|boolean'
         ]);
 
-
-
         $task = Task::create($validated);
-
-        return $task;
+        return response()->json($task, 201);
 
     }
 
@@ -68,19 +66,72 @@ class TaskController extends Controller
         //
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
+
     public function update(Request $request, string $id)
     {
-        //
+        $task = Task::where('user_id', Auth::id())
+            ->where('id', $id)
+            ->firstOrFail();
+
+        $validated = $request->validate([
+            'titulo' => 'sometimes|required|string|max:100',
+            'descripcion' => 'sometimes|required|string|max:255',
+            'fecha_vencimiento' => 'sometimes|required|string|max:50',
+            'status' => 'sometimes|required|boolean'
+        ]);
+
+        $task->update($validated);
+
+        return response()->json([
+            'message' => 'Tarea actualizada correctamente',
+            'task' => $task
+        ], 200);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
+        public function destroy(string $id)
     {
-        //
+        try {
+            // Validar que el ID sea numérico
+            if (!is_numeric($id)) {
+                return response()->json([
+                    'message' => 'El ID de la tarea debe ser numérico'
+                ], 400);
+            }
+
+            // Buscar la tarea
+            $task = Task::find($id);
+
+            // Verificar si la tarea existe
+            if (!$task) {
+                return response()->json([
+                    'message' => 'No se encontró la tarea especificada'
+                ], 404);
+            }
+
+            // Verificar si el usuario es el propietario de la tarea
+            if ($task->user_id !== Auth::id()) {
+                return response()->json([
+                    'message' => 'No está autorizado para eliminar esta tarea'
+                ], 403);
+            }
+
+            // Intentar eliminar la tarea
+            if ($task->delete()) {
+                return response()->json([
+                    'message' => 'Tarea eliminada correctamente'
+                ], 200);
+            } else {
+                return response()->json([
+                    'message' => 'Error al eliminar la tarea'
+                ], 500);
+            }
+
+        } catch (\Exception $e) {
+            // Log del error para el administrador
+
+            return response()->json([
+                'message' => 'Ha ocurrido un error al procesar la solicitud'
+            ], 500);
+        }
     }
 }
