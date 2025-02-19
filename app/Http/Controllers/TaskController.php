@@ -17,10 +17,10 @@ class TaskController extends Controller
 
     public function index()
     {
-        $tasks = Task::where('user_id', Auth::id())
-            ->get();
+        $user = Auth::user();
+    $tasks = $user->tasks;
 
-        return response()->json($tasks, 200);
+    return response()->json($tasks, 200);
     }
 
     /**
@@ -67,7 +67,7 @@ class TaskController extends Controller
     }
 
 
-    public function update(Request $request, string $id)
+    public function update(Request $request, $id)
     {
         $task = Task::where('user_id', Auth::id())
             ->where('id', $id)
@@ -88,9 +88,11 @@ class TaskController extends Controller
         ], 200);
     }
 
-        public function destroy(string $id)
+        public function destroy($id)
     {
+        $task = Task::find($id);
         try {
+
             // Validar que el ID sea numérico
             if (!is_numeric($id)) {
                 return response()->json([

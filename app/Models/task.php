@@ -14,4 +14,8 @@ class task extends Model
         'fecha_vencimiento',
         'status'
     ];
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }
